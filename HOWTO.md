@@ -28,8 +28,9 @@ That’s it. The launcher will:
 - create `miner.ini` if needed  
 - install Python packages from `requirements.txt`  
 - ask for your **EVM wallet** once, then save it  
+- create a **unique miner name** (e.g. `xnminer-a1b2c3d4`) so Woodyminer / XenBlockScan stats do not clash with other users  
 
-You do **not** need to edit config files to start mining.
+You do **not** need to edit config files to start mining. Optional: set your own name later in `miner.ini` (`worker` / `woodyminer_custom_name`).
 
 ---
 

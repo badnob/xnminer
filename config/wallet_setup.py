@@ -17,7 +17,33 @@ _PLACEHOLDERS = {
     "changeme",
     "replace_me",
 }
+# Shared default display names that would clash on Woodyminer / XenBlockScan.
+_NAME_PLACEHOLDERS = {
+    "",
+    "miner",
+    "miner1",
+    "miner2",
+    "worker",
+    "worker1",
+    "default",
+    "changeme",
+    "replace_me",
+    "yourname",
+    "your_name",
+    "your-name",
+    "xenblockscan",
+    "xnminer",
+}
 EXAMPLE_INI = ROOT / "miner.ini.example"
+
+
+def generate_random_miner_name() -> str:
+    """Unique display name per install (Woodyminer / XenBlockScan worker label)."""
+    return f"xnminer-{uuid.uuid4().hex[:8]}"
+
+
+def is_placeholder_miner_name(name: str) -> bool:
+    return name.strip().lower() in _NAME_PLACEHOLDERS
 
 
 def is_valid_eth_address(address: str) -> bool:
@@ -178,20 +204,53 @@ def save_wallet_to_ini(
         _set_ini_value(ini_path, "account", "worker", worker)
 
 
-def _ensure_worker_id(ini_path: Path) -> None:
-    text = ini_path.read_text(encoding="utf-8")
-    in_account = False
-    for line in text.splitlines():
+def _read_ini_value(ini_path: Path, section: str, key: str) -> str:
+    if not ini_path.is_file():
+        return ""
+    in_section = False
+    for line in ini_path.read_text(encoding="utf-8").splitlines():
         stripped = line.strip()
         if stripped.startswith("[") and stripped.endswith("]"):
-            in_account = stripped[1:-1].strip().lower() == "account"
+            in_section = stripped[1:-1].strip().lower() == section.lower()
             continue
-        if in_account and re.match(r"^worker\s*=", stripped, re.IGNORECASE):
-            value = stripped.split("=", 1)[1].strip()
-            if value:
-                return
-            break
-    _set_ini_value(ini_path, "account", "worker", uuid.uuid4().hex[:16])
+        if in_section and re.match(rf"^{re.escape(key)}\s*=", stripped, re.IGNORECASE):
+            return stripped.split("=", 1)[1].strip()
+    return ""
+
+
+def _ensure_worker_id(ini_path: Path) -> str:
+    """Ensure [account] worker + Woodyminer custom name are unique per install.
+
+    Empty or shared placeholders (e.g. miner1) are replaced with a random
+    ``xnminer-xxxxxxxx`` name so fleet / leaderboard data does not clash.
+    Intentional custom names are left alone.
+    """
+    worker = _read_ini_value(ini_path, "account", "worker")
+    custom = _read_ini_value(ini_path, "monitoring", "woodyminer_custom_name")
+
+    need_worker = is_placeholder_miner_name(worker)
+    need_custom = is_placeholder_miner_name(custom)
+
+    if not need_worker and not need_custom:
+        # Custom left blank on purpose → settings falls back to worker.
+        if not custom.strip() and worker.strip():
+            return worker.strip()
+        return (custom or worker).strip()
+
+    if not need_worker:
+        name = worker.strip()
+    elif not need_custom and custom.strip():
+        name = custom.strip()
+    else:
+        name = generate_random_miner_name()
+
+    if need_worker:
+        _set_ini_value(ini_path, "account", "worker", name)
+    # Always persist a concrete custom name when it was empty/placeholder so
+    # Woodyminer and XenBlockScan never share a generic default label.
+    if need_custom:
+        _set_ini_value(ini_path, "monitoring", "woodyminer_custom_name", name)
+    return name
 
 
 def prompt_for_wallet() -> str:
@@ -247,9 +306,10 @@ def ensure_wallet_configured(
 
     address = prompt_for_wallet()
     save_wallet_to_ini(path, address)
-    _ensure_worker_id(path)
+    miner_name = _ensure_worker_id(path)
     print()
     print(f"Wallet saved to {path}")
+    print(f"Miner name: {miner_name}  (unique for this install; edit miner.ini to change)")
     print("You can edit miner.ini later to change wallet, worker name, or backend.")
     print()
     return path

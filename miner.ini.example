@@ -1,7 +1,9 @@
 [account]
 # Leave empty to be prompted on first run; or set your 0x wallet here
 address =
-worker = miner1
+# Leave empty — a unique name like xnminer-a1b2c3d4 is generated on first run
+# (avoids Woodyminer / XenBlockScan clashes when everyone used "miner1")
+worker =
 
 [server]
 base_url = http://xenblocks.io
@@ -59,7 +61,8 @@ dashboard_enabled = true
 woodyminer_enabled = true
 woodyminer_upload_url = https://woodyminer.com/api/stat/upload
 woodyminer_upload_period_s = 60
-# Shown on woodyminer.com leaderboard (optional)
+# Shown on woodyminer.com leaderboard. Leave empty for auto unique name
+# (same as worker on first run). Set your own label anytime.
 woodyminer_custom_name =
 # Share accepts + holdings with XenBlockScan (http://127.0.0.1:8787 by default)
 xenblockscan_enabled = false

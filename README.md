@@ -206,7 +206,7 @@ Edit **`miner.ini`**:
 ```ini
 [account]
 address = 0xYourWallet...
-worker = YourName
+worker =                # empty = auto unique name (xnminer-xxxxxxxx)
 
 [mining]
 backend = cuda          # cuda | cpu | gpu (legacy)
