@@ -1,5 +1,6 @@
 <img width="960" height="1044" alt="image" src="https://github.com/user-attachments/assets/1785359f-7ad5-4209-93b8-f30a060de8c0" />
 <img width="844" height="677" alt="Screenshot 2026-07-13 183930" src="https://github.com/user-attachments/assets/bd0573cf-245d-46d1-9673-a18677b3f7cb" />
+
 # XenBlocks Miner by Tony.x1 #
 
 Modular **Python + native CUDA** miner for [XenBlocks](https://xenblocks.io) with a live console dashboard, smart submit queue, halving-aware rewards, and hardware-safe GPU mining.
